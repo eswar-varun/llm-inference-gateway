@@ -1,13 +1,20 @@
 # LLM Inference Gateway
 
+[![CI](https://github.com/eswar-varun/llm-inference-gateway/actions/workflows/ci.yml/badge.svg)](https://github.com/eswar-varun/llm-inference-gateway/actions/workflows/ci.yml)
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 An OpenAI-compatible gateway that sits between applications and LLM providers (Azure OpenAI,
 OpenAI, Ollama, vLLM, …) and gives every team the same routing, failure handling, rate
 limiting, caching and observability, without changing a line of client code.
 
-```
-your app ──(OpenAI SDK)──▶  gateway  ──▶  Azure OpenAI
-                               │     ──▶  Ollama / vLLM
-                               │     ──▶  mock upstream (tests, load, chaos)
+```mermaid
+flowchart LR
+    A["Your app<br/>(any OpenAI SDK)"] -->|"/v1/chat/completions"| G["LLM Inference Gateway"]
+    G --> P1["Azure OpenAI"]
+    G --> P2["Ollama / vLLM"]
+    G --> P3["mockllm<br/>(tests, load, chaos)"]
 ```
 
 > **Status: milestone 1 of 5.** The core proxy is done. See the [roadmap](#roadmap).
@@ -17,6 +24,15 @@ your app ──(OpenAI SDK)──▶  gateway  ──▶  Azure OpenAI
 Every service that calls an LLM ends up re-implementing the same things: retries, timeouts,
 provider failover, per-team quotas, cost tracking, tracing. Doing it once, in a gateway,
 means one place to get it right and one place to measure it.
+
+## Highlights
+
+| Behavior | Why it matters | Proven by |
+|---|---|---|
+| Streams commit to `200` only after the upstream's first chunk | upstream failures get real status codes, not a `200` with a broken body | [`test_upstream_failure_before_first_token_gets_a_real_status`](tests/test_streaming.py) |
+| Mid-stream failures end with an error event and **no** `[DONE]` | a truncated answer can never look complete | [`test_mid_stream_failure_becomes_an_error_event`](tests/test_upstream_errors.py) |
+| Client hang-up closes the upstream request | no paying for tokens nobody reads; upstream aborted in ~230 ms | [`test_client_hang_up_aborts_the_upstream_stream`](tests/test_integration.py) (real sockets) |
+| Every failure classified into one `ErrorKind` | status code and retryability decided in one table, not by string matching | [`test_upstream_errors.py`](tests/test_upstream_errors.py) |
 
 ## What works today (milestone 1)
 
