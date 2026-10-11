@@ -1,0 +1,35 @@
+# Copy to config/gateway.yaml (git-ignored) and edit. API keys are read from the
+# environment variables named in api_key_env; they never go in this file.
+
+providers:
+  - name: mock
+    type: openai
+    base_url: http://127.0.0.1:9000/v1
+
+  - name: ollama
+    type: openai
+    base_url: http://127.0.0.1:11434/v1
+    timeout:
+      read_s: 120          # local models on CPU can be slow to produce the first token
+
+  - name: azure
+    type: azure_openai
+    base_url: https://YOUR-RESOURCE.openai.azure.com
+    api_version: "2024-10-21"
+    api_key_env: AZURE_OPENAI_API_KEY
+
+models:
+  - alias: mock-small
+    targets:
+      - provider: mock
+        model: mock-1
+
+  - alias: llama3.2
+    targets:
+      - provider: ollama
+        model: llama3.2
+
+  - alias: gpt-4o-mini
+    targets:
+      - provider: azure
+        model: gpt-4o-mini   # Azure deployment name
