@@ -135,8 +135,8 @@ real sockets show (incremental delivery, client disconnects).
 
 - [docs/DESIGN.md](docs/DESIGN.md): architecture, request lifecycle, design decisions and the
   alternatives considered.
-- [docs/INTERVIEW_PREP.md](docs/INTERVIEW_PREP.md): questions this design invites, and
-  exercises for understanding it by breaking it.
+- [docs/FAQ.md](docs/FAQ.md): questions this design invites, and exercises for
+  understanding it by breaking it.
 
 ## License
 
